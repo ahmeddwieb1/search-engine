@@ -1,5 +1,8 @@
 package pipeline;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -136,25 +139,28 @@ public class EnglishProcessor {
         // Adjust path if running from a different working directory
         EnglishProcessor ep = new EnglishProcessor("data/stopwords/en_stopwords.txt");
 
-        String[] sentences = {
-                "The quick brown foxes are jumping over the lazy dogs",
-                "Information retrieval systems use TF-IDF weighting",
-                "Universities and colleges are educational institutions",
-                "Running, walked, happily generalization",
-        };
+//        String[] sentences = {
+//                "The quick brown foxes are jumping over the lazy dogs",
+//                "Information retrieval systems use TF-IDF weighting",
+//                "Universities and colleges are educational institutions",
+//                "Running, walked, happily generalization",
+//        };
+//
+//        for (String s : sentences) {
+//            System.out.println("IN : " + s);
+//            System.out.println("OUT: " + ep.process(s));
+//            System.out.println();
+//        }
+        try {
+            String content = Files.readString(
+                    Paths.get("data/english/doc1 E.txt")
+            );
 
-        for (String s : sentences) {
-            System.out.println("IN : " + s);
-            System.out.println("OUT: " + ep.process(s));
-            System.out.println();
-        }
+            System.out.println("IN : " + content);
+            System.out.println("OUT: " + ep.process(content));
 
-        // Test positional
-        System.out.println("--- positional ---");
-        PositionalTokens pt = ep.processWithPositions("The employment place is important");
-        for (int i = 0; i < pt.raw.size(); i++) {
-            System.out.printf("pos %-2d  raw=%-12s  stem=%s%n",
-                    i, pt.raw.get(i), pt.processed.get(i));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -1,5 +1,11 @@
 package pipeline;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -143,18 +149,29 @@ public class ArabicProcessor {
     public static void main(String[] args) {
         ArabicProcessor ap = new ArabicProcessor("data/stopwords/ar_stopwords.txt");
 
-        String[] sentences = {
-                "الجامعات العربية في المنطقة",
-                "يدرس الطلاب المعلومات في المكتبة",
-                "الاقتصاد والسياسة والعلوم الاجتماعية",
-                "على المدارس والمعلمين تطوير المناهج",
-        };
+//        String[] sentences = {
+//                "الجامعات العربية في المنطقة",
+//                "يدرس الطلاب المعلومات في المكتبة",
+//                "الاقتصاد والسياسة والعلوم الاجتماعية",
+//                "على المدارس والمعلمين تطوير المناهج",
+//        };
+//
+//        System.out.println("=== process() ===");
+//        for (String s : sentences) {
+//            System.out.println("IN : " + s);
+//            System.out.println("OUT: " + ap.process(s));
+//            System.out.println();
+//        }
+        try {
+            String content = Files.readString(
+                    Paths.get("data/arabic/doc1 A.txt")
+            );
 
-        System.out.println("=== process() ===");
-        for (String s : sentences) {
-            System.out.println("IN : " + s);
-            System.out.println("OUT: " + ap.process(s));
-            System.out.println();
+            System.out.println("IN : " + content);
+            System.out.println("OUT: " + ap.process(content));
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
