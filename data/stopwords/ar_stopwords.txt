@@ -1,9 +1,3 @@
-# Arabic stop-words
-# One word per line, UTF-8, normalized form (no diacritics, ى→ي, ة→ه).
-# Blank lines and lines starting with # are ignored.
-# Source: Ranked IR-standard Arabic stop-list (Saif et al. + CACM list).
-
-# ── Prepositions ──────────────────────────────────────────────
 في
 من
 الى

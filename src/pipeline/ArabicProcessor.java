@@ -156,13 +156,5 @@ public class ArabicProcessor {
             System.out.println("OUT: " + ap.process(s));
             System.out.println();
         }
-
-        System.out.println("=== processWithPositions() ===");
-        ArabicProcessor.PositionalTokens pt =
-                ap.processWithPositions("التوظيف في المكان المناسب مهم");
-        for (int i = 0; i < pt.raw.size(); i++) {
-            System.out.printf("pos %-2d  raw=%-14s  stem=%s%n",
-                    i, pt.raw.get(i), pt.processed.get(i));
-        }
     }
 }
