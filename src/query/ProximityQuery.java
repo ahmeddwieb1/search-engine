@@ -22,7 +22,7 @@ public class ProximityQuery {
 
             for (int p2 : position2) {
 
-                if (Math.abs(p1 - p2)-1 <= k && (!ordered || p1 < p2) ) {
+                if (Math.abs(p1 - p2) <= k && (!ordered || p1 < p2) ) {
 
                     return true;
                 }
