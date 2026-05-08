@@ -16,11 +16,12 @@ public class ProximityQuery {
         this.ordered = ordered;
     }
 
+    // machine /4 learning
     public boolean matches() {
 
-        for (int p1 : position1) {
+        for (int p1 : position1) { // 1 3 5
 
-            for (int p2 : position2) {
+            for (int p2 : position2) { // 5 6 1
 
                 if (Math.abs(p1 - p2) <= k && (!ordered || p1 < p2) ) {
 
@@ -33,6 +34,9 @@ public class ProximityQuery {
 
         return false;
     }
+
+
+
 
 
 }

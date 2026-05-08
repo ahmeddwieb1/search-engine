@@ -13,8 +13,7 @@ public class QueryProcessor {
 
     public ArrayList<Integer> search(String term){
 
-        ArrayList<Integer> result =
-                index.getPostingList(term);
+        ArrayList<Integer> result = index.getPostingList(term); // Ahmed [7 , 8 , 10]
 
         if (result == null) {
             return new ArrayList<>();
@@ -39,11 +38,11 @@ public class QueryProcessor {
             if (next == null) {
                 return new ArrayList<>();
             }
-
+            // mohamed [8,10 , 12] - nour [1 , 8 , 10 ]
             result = intersect(result, next);
         }
 
-        return result;
+        return result; // [8,10]
 
 
     }
