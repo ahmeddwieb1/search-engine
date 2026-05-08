@@ -5,6 +5,8 @@ import indexing.KGramIndex;
 import pipeline.EnglishProcessor;
 import query.Document;
 import query.ProximityQuery;
+import ranking.CosineSimilarity;
+import ranking.RankedSearch;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,7 +16,7 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static PositionalIndex positionalIndex;
+    private static PositionalIndex positionalIndex = new PositionalIndex();
     private static KGramIndex kGramIndex;
     private static ArabicProcessor ARprocessor;
     private static EnglishProcessor ENprocessor;
@@ -30,11 +32,10 @@ public class Main {
             System.out.println("1. Index Arabic Documents");
             System.out.println("2. Index English Documents");
             System.out.println("3. Index All Documents (Arabic + English)");
-            System.out.println("4. Search (Single Term)");
-            System.out.println("5. Search (Multiple Terms - AND)");
-            System.out.println("6. Proximity Search");
-            System.out.println("7. Display Positional Index");
-            System.out.println("8. Spelling Correction (K-Gram)");
+            System.out.println("4. Ranked Search (TF-IDF)");
+            System.out.println("5. Proximity Search (/k operator)");
+            System.out.println("6. Display Positional Index");
+            System.out.println("7. Spelling Correction (K-Gram)");
             System.out.println("0. Exit");
             System.out.println("=".repeat(50));
             System.out.print("Enter Your Choice: ");
@@ -53,18 +54,15 @@ public class Main {
                     indexAllDocuments();
                     break;
                 case 4:
-                    searchSingleTerm(scanner);
+                    rankedSearch(scanner);
                     break;
                 case 5:
-                    searchMultipleTerms(scanner);
-                    break;
-                case 6:
                     proximitySearch(scanner);
                     break;
-                case 7:
+                case 6:
                     displayIndex(positionalIndex);
                     break;
-                case 8:
+                case 7:
                     spellingCorrection(scanner);
                     break;
                 case 0:
@@ -198,20 +196,39 @@ public class Main {
 
     private static void proximitySearch(Scanner scanner) {
         System.out.print("\nEnter first term: ");
-        String term1 = scanner.nextLine().toLowerCase();
+        String term1 = scanner.nextLine().trim();
 
         System.out.print("Enter second term: ");
-        String term2 = scanner.nextLine().toLowerCase();
+        String term2 = scanner.nextLine().trim();
 
         System.out.print("Enter maximum distance (k): ");
         int k = scanner.nextInt();
+        scanner.nextLine(); // consume newline
 
         System.out.print("Ordered? (true/false): ");
-        boolean ordered = scanner.nextBoolean();
+        boolean ordered = Boolean.parseBoolean(scanner.nextLine().trim());
 
-        performProximityQuery(positionalIndex, term1, term2, k, ordered);
+        // معالجة الكلمتين بنفس الـ pipeline عشان يتطابقوا مع الـ index
+        List<String> tokens1 = isArabic(term1)
+                ? ARprocessor.process(term1)
+                : ENprocessor.process(term1);
+
+        List<String> tokens2 = isArabic(term2)
+                ? ARprocessor.process(term2)
+                : ENprocessor.process(term2);
+
+        if (tokens1.isEmpty() || tokens2.isEmpty()) {
+            System.out.println("Warning: One or both terms are stop-words or invalid.");
+            return;
+        }
+
+        String processedTerm1 = tokens1.get(0);
+        String processedTerm2 = tokens2.get(0);
+
+        System.out.println("Searching for: '" + processedTerm1 + "' and '" + processedTerm2 + "'");
+
+        performProximityQuery(positionalIndex, processedTerm1, processedTerm2, k, ordered);
     }
-
     private static void spellingCorrection(Scanner scanner) {
         System.out.print("\nEnter misspelled word: ");
         String misspelled = scanner.nextLine().toLowerCase();
@@ -387,6 +404,62 @@ public class Main {
         } catch (Exception e) {
             System.err.println("Cannot access kGramMap: " + e.getMessage());
             return Collections.emptyMap();
+        }
+    }
+//helper method
+    private static boolean isArabic(String text) {
+        int arabicCount = 0, letterCount = 0;
+        for (char c : text.toCharArray()) {
+            if (c >= '\u0600' && c <= '\u06FF') { arabicCount++; letterCount++; }
+            else if (Character.isLetter(c)) letterCount++;
+        }
+        return letterCount > 0 && ((double) arabicCount / letterCount) > 0.5;
+    }
+    // ==================== RANKED SEARCH ====================
+
+    private static void rankedSearch(Scanner scanner) {
+        System.out.print("\nEnter your search query: ");
+        String query = scanner.nextLine();
+
+        System.out.print("Choose language (ar/en): ");
+        String lang = scanner.nextLine().toLowerCase();
+
+        // اختيار المعالج المناسب
+        if (lang.equals("ar")) {
+            performRankedSearch(query, "ar");
+        } else if (lang.equals("en")) {
+            performRankedSearch(query, "en");
+        } else {
+            System.out.println("Invalid language. Please choose 'ar' or 'en'.");
+        }
+    }
+
+    private static void performRankedSearch(String query, String language) {
+        System.out.println("\n--- Ranked Search (TF-IDF + Cosine Similarity) ---");
+        System.out.println("Query: " + query);
+        System.out.println("Language: " + (language.equals("ar") ? "Arabic" : "English"));
+
+        // إنشاء كائن RankedSearch (نعيد استخدامه)
+        RankedSearch rankedSearch = new RankedSearch(positionalIndex, ARprocessor, ENprocessor);
+
+        long startTime = System.currentTimeMillis();
+        List<CosineSimilarity.Result> results = rankedSearch.search(query, language);
+        long endTime = System.currentTimeMillis();
+
+        System.out.println("\nSearch completed in " + (endTime - startTime) + " ms");
+
+        if (results.isEmpty()) {
+            System.out.println("No results found.");
+        } else {
+            System.out.println("\nResults (sorted by relevance):");
+            System.out.println("=".repeat(50));
+            for (int i = 0; i < results.size(); i++) {
+                CosineSimilarity.Result r = results.get(i);
+                System.out.printf("%d. Document ID: %d  (Score: %.4f)%n",
+                        i+1, r.docId, r.score);
+            }
+            System.out.println("=".repeat(50));
+            System.out.println("Total results: " + results.size());
         }
     }
 }

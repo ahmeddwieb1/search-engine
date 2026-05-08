@@ -59,4 +59,8 @@ public class PositionalIndex {
     public boolean contains(String term) {
         return index.containsKey(term);
     }
+
+    public Map<String, List<Posting>> getIndex() {
+        return index;
+    }
 }

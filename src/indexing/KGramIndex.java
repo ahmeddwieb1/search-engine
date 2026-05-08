@@ -42,4 +42,7 @@ public class KGramIndex {
         }
         return grams;
     }
+    public Map<String, Set<String>> getGramMap() {
+        return kGramMap;
+    }
 }
