@@ -56,7 +56,7 @@ public class ArabicProcessor {
      * EnglishProcessor.process().
      */
     public List<String> process(String rawText) {
-        String       normalized = normalizer.normalize(rawText);
+        String normalized = normalizer.normalize(rawText);
         List<String> tokens     = tokenize(normalized);
         List<String> filtered   = removeStopWords(tokens);
         List<String> stemmed    = stem(filtered);
@@ -76,7 +76,7 @@ public class ArabicProcessor {
 
         for (String t : raw) {
             if (stopWords.contains(t)) {
-                processed.add(null);                    // stop-word position
+                processed.add(null);
             } else {
                 processed.add(stemmer.stem(t));
             }
@@ -148,7 +148,7 @@ public class ArabicProcessor {
         ArabicProcessor ap = new ArabicProcessor("data/stopwords/ar_stopwords.txt");
 
 //        String[] sentences = {
-//                "الجامعات العربية في المنطقة",
+//                ""الجامعات", "العربية","المنطقة"",
 //                "يدرس الطلاب المعلومات في المكتبة",
 //                "الاقتصاد والسياسة والعلوم الاجتماعية",
 //                "على المدارس والمعلمين تطوير المناهج",

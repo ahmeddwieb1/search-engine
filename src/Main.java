@@ -1,218 +1,144 @@
-import ranking.TFIDFCalculator;
-import ranking.CosineSimilarity;
-import ranking.SpellingCorrector;
+import indexing.Posting;
+import pipeline.ArabicProcessor;
+import pipeline.ArabicNormalizer;
+import indexing.PositionalIndex;
+import indexing.KGramIndex;
+//import indexing.ProximityQuery;
+import query.Document;
+import query.ProximityQuery;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 public class Main {
+    public static void main(String[] args) throws IOException {
+        String stopWordsPath = "data/stopwords/ar_stopwords.txt";
+        ArabicProcessor processor = new ArabicProcessor(stopWordsPath);
 
-    static Map<Integer, String> documents =
-            new HashMap<>();
+        PositionalIndex positionalIndex = new PositionalIndex();
+        KGramIndex kGramIndex = new KGramIndex();
 
-    static Map<Integer, Map<String, Integer>> tf =
-            new HashMap<>();
-
-    static Map<String, Integer> df =
-            new HashMap<>();
-
-    static Set<String> dictionary =
-            new HashSet<>();
-
-    static Map<Integer, Map<String, Double>> tfidfIndex =
-            new HashMap<>();
-
-    public static List<String> tokenize(String text) {
-
-        return Arrays.asList(
-                text.toLowerCase().split("\\s+")
+        List<Document> documents = Arrays.asList(
+                new Document(1, Files.readString(Paths.get("data/arabic/doc1 A.txt"))),
+                new Document(2, Files.readString(Paths.get("data/arabic/doc2 A.txt"))),
+                new Document(3, Files.readString(Paths.get("data/arabic/doc3 A.txt"))),
+                new Document(4, Files.readString(Paths.get("data/arabic/doc4 A.txt"))),
+                new Document(5, Files.readString(Paths.get("data/arabic/doc5 A.txt"))),
+                new Document(6, Files.readString(Paths.get("data/arabic/doc6 A.txt"))),
+                new Document(7, Files.readString(Paths.get("data/arabic/doc7 A.txt"))),
+                new Document(8, Files.readString(Paths.get("data/arabic/doc8 A.txt")))
         );
+
+        for (Document doc : documents) {
+            indexDocument(processor, doc, positionalIndex, kGramIndex);
+        }
+
+
+//        System.out.println("=== Positional Index ===");
+        displayIndex(positionalIndex);
+
+//        System.out.println("\n=== K-Gram Index (2-grams) ===");
+        displayKGramIndex(kGramIndex);
+
+        performProximityQuery(positionalIndex, "جامع", "منطق", 1, false);
+
+    }
+    private static void performProximityQuery(PositionalIndex index, String term1, String term2,
+                                              int k, boolean ordered) {
+        List<Posting> postings1 = index.getPostings(term1);
+        List<Posting> postings2 = index.getPostings(term2);
+
+        Map<Integer, List<Integer>> posMap1 = new HashMap<>();
+        Map<Integer, List<Integer>> posMap2 = new HashMap<>();
+        for (Posting p : postings1) posMap1.put(p.getDocId(), p.getPositions());
+        for (Posting p : postings2) posMap2.put(p.getDocId(), p.getPositions());
+
+        Set<Integer> commonDocs = new HashSet<>(posMap1.keySet());
+        commonDocs.retainAll(posMap2.keySet());
+
+        System.out.printf("Query: \"%s\" and \"%s\" (k=%d, ordered=%b)%n", term1, term2, k, ordered);
+        if (commonDocs.isEmpty()) {
+            System.out.println("  No documents contain both terms.");
+        } else {
+            for (int docId : commonDocs) {
+                List<Integer> list1 = posMap1.get(docId);
+                List<Integer> list2 = posMap2.get(docId);
+                ProximityQuery pq = new ProximityQuery(
+                        new ArrayList<>(list1), new ArrayList<>(list2), k, ordered);
+                if (pq.matches()) {
+                    System.out.println("  Doc " + docId + " matches.");
+                } else {
+                    System.out.println("  Doc " + docId + " does NOT match.");
+                }
+            }
+        }
     }
 
-    public static void buildIndex() {
+    private static void indexDocument(ArabicProcessor processor, Document doc,
+                                      PositionalIndex posIndex, KGramIndex kGramIndex) {
+        var tokens = processor.processWithPositions(doc.getContent());
+        int docId = doc.getId();
 
-        for (int docId : documents.keySet()) {
+//        System.out.println("Indexing doc " + docId + ": " + doc.getContent());
+//        System.out.println("  Raw tokens: " + tokens.raw);
+//        System.out.println("  Processed: " + tokens.processed);
 
-            List<String> tokens =
-                    tokenize(documents.get(docId));
-
-            Map<String, Integer> counts =
-                    new HashMap<>();
-
-            for (String token : tokens) {
-
-                counts.put(
-                        token,
-                        counts.getOrDefault(token, 0) + 1
-                );
+        for (int position = 0; position < tokens.processed.size(); position++) {
+            String term = tokens.processed.get(position);
+            if (term != null && term.length() >= 2) {
+                posIndex.addTerm(term, docId, position);
+                kGramIndex.addTerm(term);
+//                System.out.println("    -> Added '" + term + "' at position " + position);
+            } else if (term == null) {
+//                System.out.println("    -> Stop word at position " + position);
             }
+        }
+        System.out.println();
+    }
 
-            tf.put(docId, counts);
 
-            for (String term : counts.keySet()) {
+    private static void displayIndex(PositionalIndex index) {
 
-                df.put(
-                        term,
-                        df.getOrDefault(term, 0) + 1
-                );
-
-                dictionary.add(term);
+        Map<String, List<Posting>> idx = getIndexMap(index);
+        for (Map.Entry<String, List<Posting>> entry : idx.entrySet()) {
+            System.out.print(entry.getKey() + " -> ");
+            for (Posting p : entry.getValue()) {
+                System.out.print("(doc" + p.getDocId() + ": " + p.getPositions() + ") ");
             }
+            System.out.println();
         }
     }
 
-    public static void evaluate(
-            String query,
-            List<Integer> relevantDocs
-    ) {
 
-        String fixedQuery =
-                SpellingCorrector.correctQuery(
-                        query,
-                        dictionary
-                );
-
-        List<CosineSimilarity.Result> results =
-                CosineSimilarity.rankDocuments(
-                        fixedQuery,
-                        tfidfIndex,
-                        df,
-                        documents.size()
-                );
-
-        List<Integer> retrieved =
-                new ArrayList<>();
-
-        for (CosineSimilarity.Result r : results) {
-
-            if (r.score > 0) {
-                retrieved.add(r.docId);
-            }
+    private static Map<String, List<Posting>> getIndexMap(PositionalIndex posIndex) {
+        try {
+            var field = posIndex.getClass().getDeclaredField("index");
+            field.setAccessible(true);
+            return (Map<String, List<Posting>>) field.get(posIndex);
+        } catch (Exception e) {
+//            System.err.println("Cannot access index map: " + e.getMessage());
+            return Collections.emptyMap();
         }
-
-        int truePositives = 0;
-
-        for (int doc : retrieved) {
-
-            if (relevantDocs.contains(doc)) {
-                truePositives++;
-            }
-        }
-
-        double precision =
-                retrieved.isEmpty()
-                        ? 0
-                        : (double) truePositives
-                        / retrieved.size();
-
-        double recall =
-                relevantDocs.isEmpty()
-                        ? 0
-                        : (double) truePositives
-                        / relevantDocs.size();
-
-        System.out.println(
-                "\n=============================="
-        );
-
-        System.out.println(
-                "Original Query: " + query
-        );
-
-        System.out.println(
-                "Did You Mean: " + fixedQuery
-        );
-
-        System.out.println("\nResults:");
-
-        for (CosineSimilarity.Result r : results) {
-
-            System.out.printf(
-                    "Doc %d -> %.4f\n",
-                    r.docId,
-                    r.score
-            );
-        }
-
-        System.out.printf(
-                "\nPrecision: %.2f\n",
-                precision
-        );
-
-        System.out.printf(
-                "Recall: %.2f\n",
-                recall
-        );
     }
 
-    public static void main(String[] args) {
+    private static void displayKGramIndex(KGramIndex kgIndex) {
 
-        documents.put(
-                1,
-                "information retrieval is the process of searching data"
-        );
+        Map<String, Set<String>> map = getKGramMap(kgIndex);
+//        for (Map.Entry<String, Set<String>> entry : map.entrySet()) {
+//            System.out.println(entry.getKey() + " -> " + entry.getValue());
+//        }
+    }
 
-        documents.put(
-                2,
-                "retrieval models use tf idf and cosine similarity"
-        );
-
-        documents.put(
-                3,
-                "machine learning improves search ranking"
-        );
-
-        documents.put(
-                4,
-                "deep learning is used in modern search engines"
-        );
-
-        documents.put(
-                5,
-                "data science and machine learning are related fields"
-        );
-
-        documents.put(
-                6,
-                "مرحبا بك في عالم البحث واسترجاع المعلومات"
-        );
-
-        documents.put(
-                7,
-                "تعلم الآلة يساعد في تحسين نتائج البحث"
-        );
-
-        documents.put(
-                8,
-                "محركات البحث تستخدم خوارزميات معقدة"
-        );
-
-        buildIndex();
-
-        tfidfIndex =
-                TFIDFCalculator.computeTFIDF(
-                        tf,
-                        df,
-                        documents.size()
-                );
-
-        evaluate(
-                "information retrieval",
-                Arrays.asList(1, 2)
-        );
-
-        evaluate(
-                "machine learning",
-                Arrays.asList(3, 4, 5)
-        );
-
-        evaluate(
-                "retrival modles",
-                Arrays.asList(2)
-        );
-
-        evaluate(
-                "البحث",
-                Arrays.asList(6, 8)
-        );
+    private static Map<String, Set<String>> getKGramMap(KGramIndex kgIndex) {
+        try {
+            var field = kgIndex.getClass().getDeclaredField("kGramMap");
+            field.setAccessible(true);
+            return (Map<String, Set<String>>) field.get(kgIndex);
+        } catch (Exception e) {
+            System.err.println("Cannot access kGramMap: " + e.getMessage());
+            return Collections.emptyMap();
+        }
     }
 }

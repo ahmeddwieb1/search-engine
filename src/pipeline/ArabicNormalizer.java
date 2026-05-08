@@ -22,12 +22,12 @@ public class ArabicNormalizer {
     // ── Unicode codepoints referenced below ───────────────────
     // Diacritics (Harakat + Tanwin + Shadda + Sukun)
     private static final String DIACRITICS =
-            "\u064B"  // FATHATAN
+            "\u064B"  // FATHATAN ً
                     + "\u064C"  // DAMMATAN
                     + "\u064D"  // KASRATAN
-                    + "\u064E"  // FATHA
-                    + "\u064F"  // DAMMA
-                    + "\u0650"  // KASRA
+                    + "\u064E"  // FATHA َ
+                    + "\u064F"  // DAMMA ُ
+                    + "\u0650"  // KASRA ِ
                     + "\u0651"  // SHADDA
                     + "\u0652"  // SUKUN
                     + "\u0653"  // MADDAH ABOVE

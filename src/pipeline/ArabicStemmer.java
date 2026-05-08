@@ -45,7 +45,6 @@ public class ArabicStemmer {
     private static final String[] PRE2 = { "ال", "وا", "فا", "با", "كا", "لا", "ما", "او" };
 
     // Single-char prefixes (applied last)
-    // NOTE: ك (meaning "like/as") excluded — it is far more commonly a root letter
     // than a preposition prefix, causing false positives on verbs like كتب.
     private static final String[] PRE1 = { "و", "ف", "ب", "ل", "س" };
 
@@ -77,12 +76,12 @@ public class ArabicStemmer {
             "ن",    // ن    nunation
             "ت",    // ت    feminine marker in past tense
     };
-
+    //todo remove this
     // Size-1 suffixes — intentionally empty.
     // م excluded: almost always a root letter (تعليم, معلوم) — causes false positives.
     // ا excluded: root vowel in many plurals — too aggressive.
     private static final String[] SUF1 = {};
-
+    //todo remove this
     // ── Invariant stems: never strip further ────────────────
     // Common words that look like they have prefixes/suffixes but don't.
     private static final Set<String> INVARIANTS = new HashSet<>(Arrays.asList(
@@ -90,14 +89,13 @@ public class ArabicStemmer {
             "منذ", "بعد", "قبل", "عند", "على", "الى", "في"
     ));
 
-    // ── Public API ────────────────────────────────────────────
-
     /**
      * Stem an already-normalized Arabic word.
      * Input must have been through ArabicNormalizer.normalize() first.
      */
     public String stem(String word) {
         if (word == null || word.length() <= MIN_STEM) return word;
+        //todo remove this
         if (INVARIANTS.contains(word)) return word;
 
         String s = word;
@@ -140,7 +138,7 @@ public class ArabicStemmer {
     }
 
     private String stripSuffixes(String s) {
-        // Loop until stable — handles chained suffixes like هم+ت in مدرستهم
+        // Loop until stable — handles chained suffixes like هم+ت in مدرس
         String prev;
         do {
             prev = s;

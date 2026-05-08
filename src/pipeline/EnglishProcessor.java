@@ -26,12 +26,12 @@ import java.util.List;
 public class EnglishProcessor {
 
     private final StopWords stopWords;
-    private final Stemmer   stemmer;
+    private final EnglishStemmer   stemmer;
 
 
     public EnglishProcessor(String stopWordsPath) {
         this.stopWords = new StopWords(stopWordsPath);
-        this.stemmer   = new Stemmer();
+        this.stemmer   = new EnglishStemmer();
     }
 
     // ────────────────────────────────────────────────────────────

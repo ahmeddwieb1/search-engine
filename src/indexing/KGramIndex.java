@@ -9,7 +9,7 @@ public class KGramIndex {
     private final int K = 2; // bigrams as required by the project
 
     public void addTerm(String term) {
-// Use $ to mark the border
+            // Use $ to mark the border
            String word = "$" + term + "$";
 
         for (int i = 0; i < word.length() - K + 1; i++) {  //$apple$
@@ -23,7 +23,7 @@ public class KGramIndex {
             }
                 // 3. Retrieve the set (existing or newly created) and add the term to it
             kGramMap.get(gram).add(term);               }
-                                        }
+    }
 
     // get all words that share the same gram
     public Set<String> getWordsForGram(String gram) {

@@ -10,13 +10,13 @@ package pipeline;
  *   Stemmer s = new Stemmer();
  *   String root = s.stem("running");  // → "run"
  */
-public class Stemmer {
+public class EnglishStemmer {
 
     private char[] b;   // working buffer
     private int    k;   // index of last character in b
     private int    j;   // general offset in buffer
 
-    public Stemmer() {}
+    public EnglishStemmer() {}
 
     // ────────────────────────────────────────────────────────────
     // Public API
@@ -277,11 +277,11 @@ public class Stemmer {
     }
 
     // ────────────────────────────────────────────────────────────
-    // Quick smoke-test (run: javac Stemmer.java && java pipeline.Stemmer)
+    // Quick smoke-test (run: javac EnglishStemmer.java && java pipeline.Stemmer)
     // ────────────────────────────────────────────────────────────
 
     public static void main(String[] args) {
-        Stemmer s = new Stemmer();
+        EnglishStemmer s = new EnglishStemmer();
         String[][] cases = {
                 {"caresses",    "caress"},
                 {"running",     "run"},
