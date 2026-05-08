@@ -18,7 +18,7 @@ import java.util.Scanner;
 public class Main {
 
     private static PositionalIndex positionalIndex = new PositionalIndex();
-    private static KGramIndex kGramIndex;
+    private static KGramIndex kGramIndex = new KGramIndex();
     private static ArabicProcessor ARprocessor;
     private static EnglishProcessor ENprocessor;
 
@@ -81,12 +81,11 @@ public class Main {
         // Initialize processors and indices
         String stopWordsEnPath = "data/stopwords/en_stopwords.txt";
         String stopWordsARPath = "data/stopwords/ar_stopwords.txt";
-
         ARprocessor = new ArabicProcessor(stopWordsARPath);
         ENprocessor = new EnglishProcessor(stopWordsEnPath);
+//        indexAllDocuments();
 
-        positionalIndex = new PositionalIndex();
-        kGramIndex = new KGramIndex();
+//        ArrayList<String> stemmedEN = ENprocessor.process();
 
         // Start the interactive menu
         startmenu();
@@ -105,7 +104,9 @@ public class Main {
                 new Document(5, Files.readString(Paths.get("data/arabic/doc5 A.txt"))),
                 new Document(6, Files.readString(Paths.get("data/arabic/doc6 A.txt"))),
                 new Document(7, Files.readString(Paths.get("data/arabic/doc7 A.txt"))),
-                new Document(8, Files.readString(Paths.get("data/arabic/doc8 A.txt")))
+                new Document(8, Files.readString(Paths.get("data/arabic/doc8 A.txt"))),
+                new Document(9, Files.readString(Paths.get("data/arabic/doc9 A.txt"))),
+                new Document(10, Files.readString(Paths.get("data/arabic/doc10 A.txt")))
         );
 
         for (Document doc : ardocuments) {
@@ -119,14 +120,16 @@ public class Main {
         System.out.println("\n--- Indexing English Documents ---");
 
         List<Document> Endocuments = Arrays.asList(
-                new Document(101, Files.readString(Paths.get("data/english/doc1 E.txt"))),
-                new Document(102, Files.readString(Paths.get("data/english/doc2 E.txt"))),
-                new Document(103, Files.readString(Paths.get("data/english/doc3 E.txt"))),
-                new Document(104, Files.readString(Paths.get("data/english/doc4 E.txt"))),
-                new Document(105, Files.readString(Paths.get("data/english/doc5 E.txt"))),
-                new Document(106, Files.readString(Paths.get("data/english/doc6 E.txt"))),
-                new Document(107, Files.readString(Paths.get("data/english/doc7 E.txt"))),
-                new Document(108, Files.readString(Paths.get("data/english/doc8 E.txt")))
+                new Document(11, Files.readString(Paths.get("data/english/doc1 E.txt"))),
+                new Document(12, Files.readString(Paths.get("data/english/doc2 E.txt"))),
+                new Document(13, Files.readString(Paths.get("data/english/doc3 E.txt"))),
+                new Document(14, Files.readString(Paths.get("data/english/doc4 E.txt"))),
+                new Document(15, Files.readString(Paths.get("data/english/doc5 E.txt"))),
+                new Document(16, Files.readString(Paths.get("data/english/doc6 E.txt"))),
+                new Document(17, Files.readString(Paths.get("data/english/doc7 E.txt"))),
+                new Document(18, Files.readString(Paths.get("data/english/doc8 E.txt"))) ,
+                new Document(19, Files.readString(Paths.get("data/english/doc9 E.txt"))),
+                new Document(20, Files.readString(Paths.get("data/english/doc10 E.txt")))
         );
 
         for (Document doc : Endocuments) {
@@ -366,8 +369,7 @@ public class Main {
             for (int docId : commonDocs) {
                 List<Integer> list1 = posMap1.get(docId);
                 List<Integer> list2 = posMap2.get(docId);
-                ProximityQuery pq = new ProximityQuery(
-                        new ArrayList<>(list1), new ArrayList<>(list2), k, ordered);
+                ProximityQuery pq = new ProximityQuery(new ArrayList<>(list1), new ArrayList<>(list2), k, ordered);
                 if (pq.matches()) {
                     System.out.println("  ✓ Doc " + docId + " matches.");
                     matches++;
