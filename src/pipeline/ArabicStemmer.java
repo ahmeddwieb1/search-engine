@@ -76,12 +76,12 @@ public class ArabicStemmer {
             "ن",    // ن    nunation
             "ت",    // ت    feminine marker in past tense
     };
-    //todo remove this
+   
     // Size-1 suffixes — intentionally empty.
     // م excluded: almost always a root letter (تعليم, معلوم) — causes false positives.
     // ا excluded: root vowel in many plurals — too aggressive.
     private static final String[] SUF1 = {};
-    //todo remove this
+    
     // ── Invariant stems: never strip further ────────────────
     // Common words that look like they have prefixes/suffixes but don't.
     private static final Set<String> INVARIANTS = new HashSet<>(Arrays.asList(

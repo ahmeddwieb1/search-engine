@@ -1,47 +1,40 @@
 package query;
 
+import indexing.PositionalIndex;
+import indexing.Posting;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class InvertedIndex {
 
-    HashMap<String, ArrayList<Integer>> index;
+    private PositionalIndex positionalIndex;
 
-
-    public InvertedIndex(){
-        this.index = new HashMap();
+    public InvertedIndex(PositionalIndex positionalIndex){
+        this.positionalIndex = positionalIndex;
     }
 
-
+    // keep method for compatibility but delegate to positional index
     public void addDocument(Document document) {
-        int docID = document.getId();
-        String content = document.getContent();
-
-
-        String[] words = content.split(" ");
-        for (String word : words) {
-            if (!index.containsKey(word)) {
-                index.put(word, new ArrayList<>());
-
-            }
-            index.get(word).add(docID);
-
-        }
-
+        // This method intentionally left blank — indexing happens via PositionalIndex elsewhere
+        // If needed, callers should add terms to PositionalIndex directly.
     }
 
-
+    // Return posting list as list of doc IDs (no positions)
     public ArrayList<Integer> getPostingList(String term) {
+        ArrayList<Integer> result = new ArrayList<>();
+        List<Posting> postings = positionalIndex.getPostings(term);
+        if (postings == null || postings.isEmpty()) return result;
 
-        if (!index.containsKey(term)) {
-            return new ArrayList<>();
+        Set<Integer> seen = new HashSet<>();
+        for (Posting p : postings) {
+            if (!seen.contains(p.getDocId())) {
+                result.add(p.getDocId());
+                seen.add(p.getDocId());
+            }
         }
-
-        return index.get(term);
-
+        return result;
     }
-
-
-
 
 }

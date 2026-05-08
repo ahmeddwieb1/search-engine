@@ -6,6 +6,7 @@ import pipeline.EnglishProcessor;
 import query.Document;
 import query.ProximityQuery;
 import ranking.CosineSimilarity;
+import ranking.IndexStatistics;
 import ranking.RankedSearch;
 
 import java.io.IOException;
@@ -230,33 +231,27 @@ public class Main {
         performProximityQuery(positionalIndex, processedTerm1, processedTerm2, k, ordered);
     }
     private static void spellingCorrection(Scanner scanner) {
-        System.out.print("\nEnter misspelled word: ");
-        String misspelled = scanner.nextLine().toLowerCase();
+        System.out.print("\nEnter misspelled word or phrase: ");
+        String misspelled = scanner.nextLine().trim();
 
         System.out.println("\n--- Spelling Correction for: '" + misspelled + "' ---");
 
-        List<String> misspelledGrams = kGramIndex.getGrams(misspelled);
-        System.out.println("Grams: " + misspelledGrams);
+        // use IndexStatistics dictionary (terms from positional index)
+        Set<String> dict = IndexStatistics.getDictionary(positionalIndex);
 
-        Map<String, Integer> candidateScores = new HashMap<>();
-        for (String gram : misspelledGrams) {
-            Set<String> words = kGramIndex.getWordsForGram(gram);
-            for (String word : words) {
-                candidateScores.put(word, candidateScores.getOrDefault(word, 0) + 1);
-            }
+        if (dict.isEmpty()) {
+            System.out.println("Dictionary is empty. Please index documents first.");
+            return;
         }
 
-        if (candidateScores.isEmpty()) {
-            System.out.println("No suggestions found.");
-        } else {
-            List<Map.Entry<String, Integer>> sorted = new ArrayList<>(candidateScores.entrySet());
-            sorted.sort((a, b) -> b.getValue().compareTo(a.getValue()));
+        String corrected = ranking.SpellingCorrector.correctQuery(misspelled, dict);
 
-            System.out.println("Top suggestions:");
-            for (int i = 0; i < Math.min(5, sorted.size()); i++) {
-                System.out.println("  " + (i+1) + ". " + sorted.get(i).getKey() +
-                        " (score: " + sorted.get(i).getValue() + ")");
-            }
+        System.out.println("Corrected query: " + corrected);
+
+        if (!corrected.equalsIgnoreCase(misspelled)) {
+            System.out.println("Did you mean: " + corrected + " ?");
+        } else {
+            System.out.println("No suggestions. Term(s) appear in dictionary or no close candidates.");
         }
     }
 

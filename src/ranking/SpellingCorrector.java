@@ -4,6 +4,8 @@ import java.util.*;
 
 public class SpellingCorrector {
 
+    private static final int K = 2; // use bigrams to match KGramIndex
+
     public static List<String> kgrams(
             String word,
             int k
@@ -12,12 +14,14 @@ public class SpellingCorrector {
         List<String> grams =
                 new ArrayList<>();
 
+        String w = "$" + word + "$"; // boundary markers to match KGramIndex
+
         for (int i = 0;
-             i <= word.length() - k;
+             i <= w.length() - k;
              i++) {
 
             grams.add(
-                    word.substring(i, i + k)
+                    w.substring(i, i + k)
             );
         }
 
@@ -113,7 +117,7 @@ public class SpellingCorrector {
             return word;
 
         List<String> wordGrams =
-                kgrams(word, 3);
+                kgrams(word, K);
 
         List<Candidate> candidates =
                 new ArrayList<>();
@@ -121,7 +125,7 @@ public class SpellingCorrector {
         for (String term : dictionary) {
 
             List<String> termGrams =
-                    kgrams(term, 3);
+                    kgrams(term, K);
 
             double score =
                     jaccard(
